@@ -3,6 +3,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/status_bar.dart';
 import '../ride/route_search_screen.dart';
 import '../ride/add_shortcut_screen.dart';
+import '../ride/schedule_ride_screen.dart';
 import '../../services/mock/ride_models.dart';
 import '../ride/my_rides_screen.dart';
 import '../account/account_screen.dart';
@@ -104,9 +105,12 @@ class HomeScreen extends StatelessWidget {
                                   builder: (_) => const AddShortcutScreen(kind: ShortcutKind.custom))),
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          FadeInUp(delayMs: 105, child: _bookAheadRow(context)),
                           const SizedBox(height: 16),
+                          const FadeInUp(delayMs: 130, child: ScheduledRideCard()),
                           FadeInUp(
-                              delayMs: 120,
+                              delayMs: 150,
                               child: _sectionHeader('Promos & Rewards', trailingViewAll: true)),
                           const SizedBox(height: 12),
                           const FadeInUp(delayMs: 180, child: PromoCarousel()),
@@ -189,6 +193,46 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+
+  /// Book-ahead entry points (989:17223).
+  Widget _bookAheadRow(BuildContext context) => Row(children: [
+        Expanded(
+          child: _bookAheadBtn(context, Icons.event_outlined, 'Schedule ahead',
+              () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const ScheduleRideScreen()))),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _bookAheadBtn(context, Icons.person_add_alt, 'Ride for someone',
+              () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const ScheduleRideScreen(forSomeoneElse: true)))),
+        ),
+      ]);
+
+  Widget _bookAheadBtn(BuildContext context, IconData icon, String label, VoidCallback onTap) =>
+      Material(
+        color: const Color(0xFFF4F5F9),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Container(
+            height: 46,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(children: [
+              Icon(icon, size: 17, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 12.5, fontWeight: FontWeight.w600, color: _ink)),
+              ),
+            ]),
+          ),
+        ),
+      );
 
   Widget _sectionHeader(String title, {bool trailingViewAll = false}) {
     return Row(

@@ -3,7 +3,6 @@ import '../../theme/app_colors.dart';
 import '../../widgets/status_bar.dart';
 import '../../services/mock/safety_repository.dart';
 import '../account/account_widgets.dart';
-import '../ride/trip_details_sheet.dart';
 
 const _ink = Color(0xFF0A0F2C);
 const _sub = Color(0xFF808080);
@@ -51,9 +50,8 @@ class _SafetyHubScreenState extends State<SafetyHubScreen> {
                     n == 0 ? 'None added' : '$n added',
                     () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => const EmergencyContactsScreen()))),
-                _row(Icons.ios_share, 'Share trip',
-                    'Share live trip details with someone you trust',
-                    () => showTripShareSheet(context)),
+                // "Share trip" deliberately omitted: it only means anything during
+                // an active trip, and the in-trip sheet already carries that action.
                 _row(Icons.flag_outlined, 'Report an issue',
                     'Report unsafe driver or incident',
                     () => Navigator.of(context).push(

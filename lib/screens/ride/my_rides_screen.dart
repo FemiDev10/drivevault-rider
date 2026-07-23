@@ -5,6 +5,8 @@ import '../../services/mock/ride_models.dart';
 import '../../services/mock/mock_repository.dart';
 import 'trip_end_screens.dart';
 import '../account/account_screen.dart';
+import '../../services/mock/schedule_repository.dart';
+import 'schedule_ride_screen.dart';
 
 const _ink = Color(0xFF0A0F2C);
 const _sub = Color(0xFF808080);
@@ -75,7 +77,7 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Expanded(child: _tab == 0 ? _pastList() : _scheduledEmpty()),
+            Expanded(child: _tab == 0 ? _pastList() : _scheduledList()),
             _bottomNav(),
           ],
         ),
@@ -145,15 +147,67 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
     );
   }
 
+  /// Scheduled tab — real bookings, with the empty state as a fallback.
+  Widget _scheduledList() {
+    final rides = ScheduleStore.instance.rides;
+    if (rides.isEmpty) return _scheduledEmpty();
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      children: [
+        for (final r in rides)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => ScheduleConfirmedScreen(ride: r))),
+              child: Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.stroke)),
+                padding: const EdgeInsets.all(14),
+                child: Row(children: [
+                  Container(
+                    width: 42, height: 42,
+                    decoration: const BoxDecoration(
+                        color: Color(0xFFF0F2FA), shape: BoxShape.circle),
+                    child: const Icon(Icons.event, size: 20, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(r.whenLabel,
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w700, color: _green)),
+                      const SizedBox(height: 4),
+                      Text(r.destination.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14, color: AppColors.black)),
+                      if (r.forSomeoneElse) ...[
+                        const SizedBox(height: 3),
+                        Text('For ${r.rider!.name}',
+                            style: const TextStyle(fontSize: 12, color: _sub)),
+                      ],
+                    ]),
+                  ),
+                  const Icon(Icons.chevron_right, size: 22, color: _sub),
+                ]),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _scheduledEmpty() => Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(width: 64, height: 64,
               decoration: const BoxDecoration(color: Color(0xFFF0F2FA), shape: BoxShape.circle),
-              child: const Icon(Icons.directions_car_outlined, size: 30, color: _sub)),
+              child: const Icon(Icons.event_outlined, size: 30, color: _sub)),
           const SizedBox(height: 16),
           const Text('No upcoming rides', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _ink)),
           const SizedBox(height: 4),
-          const Text('You don’t have any scheduled rides at the moment', style: TextStyle(fontSize: 13, color: _sub)),
+          const Text('Schedule a ride from the home screen', style: TextStyle(fontSize: 13, color: _sub)),
         ]),
       );
 
