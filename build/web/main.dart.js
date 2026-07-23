@@ -37094,7 +37094,7 @@ A.aiE.prototype={
 $0(){var s,r=this.a,q=r.c
 if(q==null)return
 s=r.d
-if(s.a.a==="1234"){r=A.a5(q,!1)
+if(s.a.a==="0291"){r=A.a5(q,!1)
 q=r.qV("/home",null,t.X)
 q.toString
 r.a9E(A.ald(q,B.mL,!1,null),new A.aiB())}else{r.S(new A.aiC(r))

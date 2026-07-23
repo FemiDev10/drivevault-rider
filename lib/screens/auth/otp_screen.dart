@@ -6,7 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/status_bar.dart';
 import '../../widgets/dv_widgets.dart';
 
-/// OTP verification. The prototype always accepts 1234.
+/// OTP verification. The prototype accepts the access code 0291.
 /// States: typing → verifying (spinner) → success (→ Home) / incorrect (red).
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key, this.phone = '+234 816 687 9486'});
@@ -55,7 +55,7 @@ class _OtpScreenState extends State<OtpScreen> {
     setState(() => _state = _OtpState.verifying);
     Timer(const Duration(milliseconds: 1400), () {
       if (!mounted) return;
-      if (_controller.text == '1234') {
+      if (_controller.text == '0291') {
         Navigator.of(context).pushNamedAndRemoveUntil(Routes.home, (_) => false);
       } else {
         setState(() {
