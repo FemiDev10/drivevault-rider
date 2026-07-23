@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/status_bar.dart';
 import '../ride/route_search_screen.dart';
+import '../ride/add_shortcut_screen.dart';
+import '../../services/mock/ride_models.dart';
 import '../ride/my_rides_screen.dart';
 import '../account/account_screen.dart';
 import 'home_cards.dart';
@@ -92,6 +94,16 @@ class HomeScreen extends StatelessWidget {
                           FadeInUp(delayMs: 0, child: _greetingRow()),
                           const SizedBox(height: 16),
                           FadeInUp(delayMs: 60, child: _searchBar(context)),
+                          const SizedBox(height: 12),
+                          FadeInUp(
+                            delayMs: 90,
+                            child: SavedPlacesRow(
+                              onPick: (_) => Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => const RouteSearchScreen())),
+                              onAdd: () => Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => const AddShortcutScreen(kind: ShortcutKind.custom))),
+                            ),
+                          ),
                           const SizedBox(height: 16),
                           FadeInUp(
                               delayMs: 120,

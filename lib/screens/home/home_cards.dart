@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../services/mock/rider_profile.dart';
+import '../../services/mock/safety_repository.dart';
 import '../account/verify_identity_screen.dart';
 import '../payment/offers_screen.dart';
 
@@ -484,4 +485,123 @@ class _RewardsCardState extends State<RewardsCard> with SingleTickerProviderStat
         decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: alpha), shape: BoxShape.circle),
       );
+}
+
+/// ---------------------------------------------------------------------------
+/// Saved places — Home / Work / custom shortcuts under the search bar.
+/// ---------------------------------------------------------------------------
+
+class SavedPlacesRow extends StatefulWidget {
+  const SavedPlacesRow({super.key, required this.onPick, required this.onAdd});
+  final void Function(SavedPlace) onPick;
+  final VoidCallback onAdd;
+
+  @override
+  State<SavedPlacesRow> createState() => _SavedPlacesRowState();
+}
+
+class _SavedPlacesRowState extends State<SavedPlacesRow> {
+  final _s = SafetyStore.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _s.addListener(_r);
+  }
+
+  void _r() => setState(() {});
+
+  @override
+  void dispose() {
+    _s.removeListener(_r);
+    super.dispose();
+  }
+
+  IconData _icon(String key) => switch (key) {
+        'home' => Icons.home_outlined,
+        'work' => Icons.work_outline,
+        _ => Icons.place_outlined,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        children: [
+          for (final p in _s.places) ...[
+            _chip(
+              icon: _icon(p.icon),
+              label: p.label,
+              onTap: () => widget.onPick(p),
+              onLongPress: () => _confirmRemove(p),
+            ),
+            const SizedBox(width: 8),
+          ],
+          _chip(icon: Icons.add, label: 'Add shortcut', dashed: true, onTap: widget.onAdd),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    VoidCallback? onLongPress,
+    bool dashed = false,
+  }) =>
+      Material(
+        color: dashed ? Colors.transparent : const Color(0xFFF4F5F9),
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: dashed ? Border.all(color: const Color(0xFFD5D8E4)) : null,
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(icon, size: 16, color: dashed ? _muted : AppColors.primary),
+              const SizedBox(width: 7),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: dashed ? _muted : _ink)),
+            ]),
+          ),
+        ),
+      );
+
+  void _confirmRemove(SavedPlace p) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Remove ${p.label}?',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _ink)),
+        content: Text(p.address, style: const TextStyle(fontSize: 14, color: _muted)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Keep',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary))),
+          TextButton(
+              onPressed: () {
+                _s.removePlace(p);
+                Navigator.pop(ctx);
+              },
+              child: const Text('Remove',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.red))),
+        ],
+      ),
+    );
+  }
 }

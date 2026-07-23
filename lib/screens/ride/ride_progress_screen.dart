@@ -10,6 +10,7 @@ import '../../services/mock/driver.dart';
 import 'trip_end_screens.dart';
 import 'ride_outcome_screens.dart';
 import 'incoming_call_screen.dart';
+import '../safety/safety_screens.dart';
 import 'trip_details_sheet.dart';
 import 'payment_status_screen.dart';
 import 'message_call_screens.dart';
@@ -173,6 +174,47 @@ class _RideProgressScreenState extends State<RideProgressScreen> {
       // Otherwise the driver starts the trip a few seconds after arriving.
       _timer = Timer(Duration(milliseconds: _far ? 8000 : 4500), _far ? _missedDriver : _startTrip);
     });
+  }
+
+  /// 4116:22166 — confirm before throwing away an in-flight negotiation.
+  void _cancelNegotiation() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Cancel negotiation?',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _ink)),
+        content: const Text(
+            'Your current offer will be withdrawn and the driver will be released. '
+            'Nothing has been charged.',
+            style: TextStyle(fontSize: 14, color: _sub, height: 1.4)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Keep negotiating',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _endNegotiation();
+            },
+            child: const Text('Yes, end negotiation',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _endNegotiation({bool noAgreement = false}) {
+    _roundTimer?.cancel();
+    _timer?.cancel();
+    _tick?.cancel();
+    _callTimer?.cancel();
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (_) => NegotiationCancelledScreen(noAgreement: noAgreement)));
   }
 
   /// 1362:17801 — rider didn't show; the driver waited 10 minutes and left.
@@ -423,8 +465,38 @@ class _RideProgressScreenState extends State<RideProgressScreen> {
             const Positioned(top: 60, left: 0, right: 0, child: _Banner(text: 'Your ride has been confirmed'))
           else
             Positioned(top: 64, left: 24, child: InkWell(
-                onTap: () => Navigator.of(context).maybePop(),
-                child: const Icon(Icons.arrow_back, size: 24, color: _ink))),
+                onTap: _phase == _Phase.negotiating
+                    ? _cancelNegotiation
+                    : () => Navigator.of(context).maybePop(),
+                child: Icon(_phase == _Phase.negotiating ? Icons.close : Icons.arrow_back,
+                    size: 24, color: _ink))),
+          // In-trip SOS — available from the moment a driver is assigned.
+          if (_phase == _Phase.confirmed ||
+              _phase == _Phase.arrived ||
+              _phase == _Phase.inProgress)
+            Positioned(
+              top: 108, right: 20,
+              child: Material(
+                color: AppColors.white,
+                shape: const CircleBorder(),
+                elevation: 4,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => showSosSheet(context),
+                  child: Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.red.withValues(alpha: 0.35), width: 1.5),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text('SOS',
+                        style: TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.red)),
+                  ),
+                ),
+              ),
+            ),
           Align(alignment: Alignment.bottomCenter, child: _sheet()),
         ],
       ),

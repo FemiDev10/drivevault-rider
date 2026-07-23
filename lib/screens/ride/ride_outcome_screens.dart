@@ -231,3 +231,29 @@ class MissedDriverScreen extends StatelessWidget {
     );
   }
 }
+
+/// 4116:22166 — the rider ended the negotiation before agreeing a fare.
+/// No money moved and no driver was assigned, so the copy is reassuring
+/// rather than apologetic, and the primary action restarts the search.
+class NegotiationCancelledScreen extends StatelessWidget {
+  const NegotiationCancelledScreen({super.key, this.noAgreement = false});
+
+  /// True when the rounds ran out rather than the rider backing out.
+  final bool noAgreement;
+
+  @override
+  Widget build(BuildContext context) {
+    void goHome() => Navigator.of(context).popUntil((r) => r.isFirst);
+    return _Outcome(
+      icon: noAgreement ? Icons.handshake_outlined : Icons.close,
+      iconColor: AppColors.mutedText,
+      title: noAgreement ? 'No agreement reached' : 'Negotiation cancelled',
+      body: noAgreement
+          ? 'You and the driver couldn’t agree on a fare. Nothing has been charged — try again or book at the standard price.'
+          : 'You ended the negotiation. No driver was assigned and nothing has been charged.',
+      primaryLabel: 'Try again',
+      onPrimary: goHome,
+      secondary: _textAction('Go home', goHome),
+    );
+  }
+}

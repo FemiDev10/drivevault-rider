@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/status_bar.dart';
 import '../../services/mock/rider_profile.dart';
+import '../../services/mock/safety_repository.dart';
+import '../safety/safety_screens.dart';
 import 'account_widgets.dart';
 import 'verify_identity_screen.dart';
 import 'edit_field_screens.dart';
@@ -94,12 +96,20 @@ class _AccountScreenState extends State<AccountScreen> {
 
                   SectionLabel('Safety'),
                   RowTile(
-                    label: 'Emergency contact',
-                    value: _p.emergencyName ?? 'Not set',
-                    valueMuted: _p.emergencyName == null,
+                    label: 'Emergency contacts',
+                    value: SafetyStore.instance.contacts.isEmpty
+                        ? 'None added'
+                        : '${SafetyStore.instance.contacts.length} added',
+                    valueMuted: SafetyStore.instance.contacts.isEmpty,
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const EmergencyContactsScreen())),
+                  ),
+                  RowTile(
+                    label: 'Safety centre',
+                    value: 'Share trip, report an issue, SOS',
                     last: true,
                     onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const EmergencyContactScreen())),
+                        MaterialPageRoute(builder: (_) => const SafetyHubScreen())),
                   ),
                   const SizedBox(height: 28),
 

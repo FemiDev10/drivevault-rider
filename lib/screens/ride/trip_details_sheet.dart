@@ -147,6 +147,9 @@ class TripDetailsSheet extends StatelessWidget {
 }
 
 // ---- Share trip (4116:22167) ----
+/// Public entry point so the Safety hub can share a live trip too.
+void showTripShareSheet(BuildContext context) => _showShareSheet(context);
+
 void _showShareSheet(BuildContext context) {
   showModalBottomSheet(
     context: context, backgroundColor: Colors.transparent, isScrollControlled: true,

@@ -4,7 +4,7 @@ import '../ride/my_rides_screen.dart';
 import '../payment/payment_screen.dart';
 import '../account/account_screen.dart';
 import '../account/about_support_screens.dart';
-import '../account/edit_field_screens.dart';
+import '../safety/safety_screens.dart';
 
 const _ink = Color(0xFF0A0F2C);
 const _sub = Color(0xFF808080);
@@ -96,7 +96,7 @@ class _MenuPanel extends StatelessWidget {
                     () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaymentScreen())); }),
                 _item(Icons.access_time, 'My Rides', 'Past and upcoming',
                     () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyRidesScreen())); }),
-                _item(Icons.shield_outlined, 'Safety', 'Emergency & contacts', () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EmergencyContactScreen())); }),
+                _item(Icons.shield_outlined, 'Safety', 'Emergency & contacts', () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SafetyHubScreen())); }),
                 _item(Icons.chat_bubble_outline, 'Support', 'Help center & issues', () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SupportScreen())); }),
                 _item(Icons.info_outline, 'About', 'Version & legal', () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AboutScreen())); }),
                 const Spacer(),
