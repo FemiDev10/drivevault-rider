@@ -17,6 +17,9 @@ class AppColors {
   static const Color textInsideCircle = Color(0xFF4D4D4D);
   static const Color stroke = Color(0xFFE6E6E6);
 
+  /// Muted blue-grey used for supporting copy on outcome/empty screens.
+  static const Color mutedText = Color(0xFF8A90A8);
+
   /// Semantic
   static const Color red = Color(0xFFFF3B30);
   static const Color redBg = Color(0x1AFF3B30); // 10% red

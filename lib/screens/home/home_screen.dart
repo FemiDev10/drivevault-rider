@@ -3,6 +3,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/status_bar.dart';
 import '../ride/route_search_screen.dart';
 import '../ride/my_rides_screen.dart';
+import '../account/account_screen.dart';
 import '../menu/side_menu.dart';
 
 /// Home — map, greeting, search, promos & rewards, bottom nav.
@@ -398,7 +399,8 @@ class _BottomNav extends StatelessWidget {
           _navItem(Icons.calendar_today_outlined, 'Trips',
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyRidesScreen()))),
           const SizedBox(width: 80),
-          _navItem(Icons.person_outline, 'Account'),
+          _navItem(Icons.person_outline, 'Account',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountScreen()))),
         ],
       ),
     );

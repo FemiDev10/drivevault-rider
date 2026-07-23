@@ -4,6 +4,7 @@ import '../../widgets/status_bar.dart';
 import '../../services/mock/ride_models.dart';
 import '../../services/mock/mock_repository.dart';
 import 'trip_end_screens.dart';
+import '../account/account_screen.dart';
 
 const _ink = Color(0xFF0A0F2C);
 const _sub = Color(0xFF808080);
@@ -165,7 +166,8 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
           const SizedBox(width: 80),
           _nav(Icons.event_note, 'Trips', true, () {}),
           const SizedBox(width: 80),
-          _nav(Icons.person_outline, 'Account', false, () {}),
+          _nav(Icons.person_outline, 'Account', false,
+              () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountScreen()))),
         ]),
       );
 

@@ -8,6 +8,8 @@ import '../../services/mock/mock_repository.dart';
 import '../../services/mock/rewards_repository.dart';
 import '../../services/mock/driver.dart';
 import 'trip_end_screens.dart';
+import 'ride_outcome_screens.dart';
+import 'incoming_call_screen.dart';
 import 'trip_details_sheet.dart';
 import 'payment_status_screen.dart';
 import 'message_call_screens.dart';
@@ -40,6 +42,7 @@ class RideProgressScreen extends StatefulWidget {
 
 class _RideProgressScreenState extends State<RideProgressScreen> {
   _Phase _phase = _Phase.finding;
+  Timer? _callTimer;
   int _round = 1;
   late int _driverAsk;
   late int _prevDriverAsk;
@@ -72,6 +75,7 @@ class _RideProgressScreenState extends State<RideProgressScreen> {
 
   @override
   void dispose() {
+    _callTimer?.cancel();
     _timer?.cancel();
     _tick?.cancel();
     _roundTimer?.cancel();
@@ -153,6 +157,10 @@ class _RideProgressScreenState extends State<RideProgressScreen> {
       _agreed = price;
       _phase = _Phase.confirmed;
     });
+    // Drivers usually ring to confirm the pickup spot once they're on the way.
+    _callTimer = Timer(const Duration(milliseconds: 1200), () {
+      if (mounted) IncomingCallScreen.ring(context);
+    });
     _timer = Timer(const Duration(milliseconds: 2600), () {
       if (!mounted) return;
       setState(() => _phase = _Phase.arrived);
@@ -167,52 +175,13 @@ class _RideProgressScreenState extends State<RideProgressScreen> {
     });
   }
 
-  /// Frame 552 — rider didn't show; driver waited 10 min.
+  /// 1362:17801 — rider didn't show; the driver waited 10 minutes and left.
   void _missedDriver() {
     if (!mounted) return;
     _tick?.cancel();
-    showModalBottomSheet(
-      context: context, isDismissible: false, enableDrag: false,
-      isScrollControlled: true, backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: const BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Center(child: Container(width: 68, height: 5, decoration: BoxDecoration(color: const Color(0xFFDCDFE5), borderRadius: BorderRadius.circular(18)))),
-          const SizedBox(height: 8),
-          Align(alignment: Alignment.centerRight, child: InkWell(onTap: () => Navigator.pop(ctx), child: const Icon(Icons.close, size: 22, color: _ink))),
-          Container(width: 56, height: 56, decoration: const BoxDecoration(color: Color(0x1AF59E0B), shape: BoxShape.circle),
-              child: const Icon(Icons.schedule, size: 28, color: Color(0xFFF59E0B))),
-          const SizedBox(height: 16),
-          const Text('Looks like you missed your driver', textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _ink)),
-          const SizedBox(height: 6),
-          Text('${kDriver.name.split(' ').first} waited 10 minutes at your pickup.',
-              textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: _sub)),
-          const SizedBox(height: 16),
-          const Divider(color: Color(0xFFEDEDED), height: 1),
-          const SizedBox(height: 16),
-          SizedBox(width: double.infinity, height: 51, child: Material(color: AppColors.primary, borderRadius: BorderRadius.circular(30),
-              child: InkWell(borderRadius: BorderRadius.circular(30),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    setState(() { _msgs.clear(); _round = 1; _wait = 203; _phase = _Phase.finding; });
-                    _timer = Timer(const Duration(milliseconds: 2200), _far ? _showHighDemand : _afterFinding);
-                  },
-                  child: const Center(child: Text('Find a new driver', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.white)))))),
-          const SizedBox(height: 10),
-          SizedBox(width: double.infinity, height: 51, child: OutlinedButton(
-              onPressed: () { Navigator.pop(ctx); Navigator.of(context).maybePop(); },
-              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
-              child: const Text('Change pickup location', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary)))),
-          const SizedBox(height: 14),
-          RichText(text: const TextSpan(children: [
-            TextSpan(text: 'Did something go wrong? ', style: TextStyle(fontSize: 12, color: _sub)),
-            TextSpan(text: 'Contact support.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary)),
-          ])),
-        ]),
-      ),
-    );
+    _timer?.cancel();
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MissedDriverScreen()));
   }
 
   void _startTrip() {
@@ -246,7 +215,14 @@ class _RideProgressScreenState extends State<RideProgressScreen> {
     TripDetailsSheet.show(context,
         pickup: widget.pickup, destination: widget.destination,
         fare: _agreed == 0 ? widget.quote.instant : _agreed,
-        onCancel: () => Navigator.of(context).popUntil((r) => r.isFirst));
+        onCancel: () {
+          _timer?.cancel();
+          _tick?.cancel();
+          _callTimer?.cancel();
+          _roundTimer?.cancel();
+          Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const RideCancelledScreen()));
+        });
   }
 
   // ----- negotiation -----

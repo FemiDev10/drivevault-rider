@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../ride/my_rides_screen.dart';
 import '../payment/payment_screen.dart';
+import '../account/account_screen.dart';
+import '../account/about_support_screens.dart';
+import '../account/edit_field_screens.dart';
 
 const _ink = Color(0xFF0A0F2C);
 const _sub = Color(0xFF808080);
@@ -52,19 +55,28 @@ class _MenuPanel extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [
-                  Container(width: 44, height: 44,
-                      decoration: const BoxDecoration(color: Color(0xFFF0F2FA), shape: BoxShape.circle),
-                      child: const Icon(Icons.person_outline, size: 24, color: _sub)),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Femi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _ink)),
-                      Text('My account', style: TextStyle(fontSize: 13, color: AppColors.primary)),
-                    ],
-                  ),
-                ]),
+                InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const AccountScreen()));
+                  },
+                  child: Row(children: [
+                    Container(width: 44, height: 44,
+                        decoration: const BoxDecoration(color: Color(0xFFF0F2FA), shape: BoxShape.circle),
+                        child: const Icon(Icons.person_outline, size: 24, color: _sub)),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Femi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _ink)),
+                        Text('My account', style: TextStyle(fontSize: 13, color: AppColors.primary)),
+                      ],
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.chevron_right, size: 22, color: _sub),
+                  ]),
+                ),
                 const SizedBox(height: 16),
                 Row(children: const [
                   Icon(Icons.star, size: 16, color: Color(0xFFF5C518)),
@@ -84,9 +96,9 @@ class _MenuPanel extends StatelessWidget {
                     () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaymentScreen())); }),
                 _item(Icons.access_time, 'My Rides', 'Past and upcoming',
                     () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyRidesScreen())); }),
-                _item(Icons.shield_outlined, 'Safety', 'Emergency & contacts', () {}),
-                _item(Icons.chat_bubble_outline, 'Support', 'Help center & issues', () {}),
-                _item(Icons.info_outline, 'About', 'Version & legal', () {}),
+                _item(Icons.shield_outlined, 'Safety', 'Emergency & contacts', () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EmergencyContactScreen())); }),
+                _item(Icons.chat_bubble_outline, 'Support', 'Help center & issues', () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SupportScreen())); }),
+                _item(Icons.info_outline, 'About', 'Version & legal', () { Navigator.pop(context); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AboutScreen())); }),
                 const Spacer(),
                 Container(
                   decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12)),

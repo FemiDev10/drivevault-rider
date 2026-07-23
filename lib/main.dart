@@ -8,6 +8,8 @@ import 'screens/auth/create_account_screen.dart';
 import 'screens/auth/welcome_back_screen.dart';
 import 'screens/auth/otp_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/account/account_screen.dart';
+import 'screens/account/about_support_screens.dart';
 
 void main() {
   runApp(const DriveVaultApp());
@@ -52,6 +54,12 @@ class DriveVaultApp extends StatelessWidget {
             return _page(OtpScreen(phone: phone ?? '+234 816 687 9486'));
           case Routes.home:
             return _page(const HomeScreen());
+          case Routes.account:
+            return _page(const AccountScreen());
+          case Routes.support:
+            return _page(const SupportScreen());
+          case Routes.about:
+            return _page(const AboutScreen());
           default:
             return _page(const SplashScreen());
         }
@@ -72,4 +80,7 @@ class Routes {
   static const signIn = '/auth/signin';
   static const otp = '/auth/otp';
   static const home = '/home';
+  static const account = '/account';
+  static const support = '/support';
+  static const about = '/about';
 }
