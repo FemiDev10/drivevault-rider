@@ -9,8 +9,11 @@ import '../../widgets/dv_widgets.dart';
 /// OTP verification. The prototype accepts the access code 0291.
 /// States: typing → verifying (spinner) → success (→ Home) / incorrect (red).
 class OtpScreen extends StatefulWidget {
-  const OtpScreen({super.key, this.phone = '+234 816 687 9486'});
+  const OtpScreen({super.key, this.phone = '+234 816 687 9486', this.isEmail = false});
+
+  /// Where the code was sent — a phone number, or an email when [isEmail].
   final String phone;
+  final bool isEmail;
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -112,9 +115,9 @@ class _OtpScreenState extends State<OtpScreen> {
                   children: [
                     BackChevron(onTap: () => Navigator.of(context).maybePop()),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Verify your Phone Number',
-                      style: TextStyle(
+                    Text(
+                      widget.isEmail ? 'Verify your Email' : 'Verify your Phone Number',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: AppColors.black,
@@ -132,7 +135,7 @@ class _OtpScreenState extends State<OtpScreen> {
                               color: AppColors.black,
                             ),
                           ),
-                          const TextSpan(text: ' via SMS'),
+                          TextSpan(text: widget.isEmail ? ' via email' : ' via SMS'),
                         ],
                         style: const TextStyle(
                           fontSize: 14,
