@@ -200,7 +200,7 @@ class _AccountScreenState extends State<AccountScreen> {
             Text(
               inReview
                   ? 'We’re checking your NIN ending ${_p.ninLast4}. This usually takes a few minutes.'
-                  : 'Add your NIN to pay by bank transfer, get priority support and keep DriveVault safe for everyone.',
+                  : 'Add your NIN to unlock priority support, mega promos and weekly discounts — and help keep DriveVault safe for everyone.',
               style: const TextStyle(fontSize: 13, color: _sub, height: 1.35),
             ),
             if (!inReview) ...[

@@ -126,9 +126,10 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen> {
           Text('What verifying unlocks',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _ink)),
           SizedBox(height: 12),
-          _Benefit('Pay by bank transfer'),
-          _Benefit('Priority support on disputes'),
-          _Benefit('Higher offer limits when negotiating'),
+          _Benefit('Priority support'),
+          _Benefit('Mega promos'),
+          _Benefit('Weekly discounts'),
+          _Benefit('Keeps DriveVault safe for everyone'),
         ]),
       );
 }

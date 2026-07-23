@@ -116,48 +116,128 @@ class MessageScreen extends StatelessWidget {
       );
 }
 
-/// "Call driver" — how-to-contact bottom sheet.
+/// "Call driver" — pick a method, then place the call.
+///
+/// Selecting a radio must not dial on its own: riders tap to compare options,
+/// and an accidental call to a driver is expensive to undo. Choose, then Call.
 void showCallDriverSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => Container(
-      decoration: const BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Center(child: Container(width: 68, height: 5, decoration: BoxDecoration(color: const Color(0xFFDCDFE5), borderRadius: BorderRadius.circular(18)))),
-        const SizedBox(height: 16),
-        Row(children: [
-          const Text('Call driver', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _ink)),
-          const Spacer(),
-          InkWell(onTap: () => Navigator.pop(ctx), child: const Icon(Icons.close, size: 22, color: _ink)),
-        ]),
-        const SizedBox(height: 4),
-        const Text('Choose how you’d like to contact the driver', style: TextStyle(fontSize: 13, color: _sub)),
-        const SizedBox(height: 16),
-        _callOption(ctx, Icons.smartphone, 'In-app call', true,
-            () { Navigator.pop(ctx); Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CallDriverScreen())); }),
-        const Divider(height: 1, color: Color(0xFFEDEDED)),
-        _callOption(ctx, Icons.call, 'Phone call', false, () => Navigator.pop(ctx)),
-      ]),
-    ),
+    builder: (ctx) => _CallDriverSheet(parent: context),
   );
 }
 
-Widget _callOption(BuildContext ctx, IconData icon, String label, bool selected, VoidCallback onTap) => InkWell(
-      onTap: onTap,
+class _CallDriverSheet extends StatefulWidget {
+  const _CallDriverSheet({required this.parent});
+  final BuildContext parent;
+  @override
+  State<_CallDriverSheet> createState() => _CallDriverSheetState();
+}
+
+class _CallDriverSheetState extends State<_CallDriverSheet> {
+  int _method = 0; // 0 = in-app, 1 = phone
+
+  void _call() {
+    Navigator.pop(context);
+    if (_method == 0) {
+      Navigator.of(widget.parent).push(
+          MaterialPageRoute(builder: (_) => const CallDriverScreen()));
+    } else {
+      ScaffoldMessenger.of(widget.parent).showSnackBar(
+          const SnackBar(content: Text('Dialling the driver on your phone…')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Center(
+          child: Container(
+              width: 68, height: 5,
+              decoration: BoxDecoration(
+                  color: const Color(0xFFDCDFE5), borderRadius: BorderRadius.circular(18))),
+        ),
+        const SizedBox(height: 16),
+        Row(children: [
+          const Text('Call driver',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _ink)),
+          const Spacer(),
+          InkWell(
+              onTap: () => Navigator.pop(context),
+              child: const Icon(Icons.close, size: 22, color: _ink)),
+        ]),
+        const SizedBox(height: 4),
+        const Text('Choose how you\u2019d like to contact the driver',
+            style: TextStyle(fontSize: 13, color: _sub)),
+        const SizedBox(height: 8),
+        _option(0, Icons.smartphone, 'In-app call', 'Free \u00b7 your number stays private'),
+        const Divider(height: 1, color: Color(0xFFEDEDED)),
+        _option(1, Icons.call, 'Phone call', 'Uses your airtime'),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity, height: 51,
+          child: Material(
+            color: AppColors.green,
+            borderRadius: BorderRadius.circular(30),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(30),
+              onTap: _call,
+              child: Center(
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.call, size: 18, color: AppColors.white),
+                  const SizedBox(width: 8),
+                  Text(_method == 0 ? 'Call in app' : 'Call on phone',
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.white)),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _option(int value, IconData icon, String label, String sub) {
+    final selected = _method == value;
+    return InkWell(
+      onTap: () => setState(() => _method = value),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         child: Row(children: [
-          Icon(icon, size: 20, color: _ink),
+          Icon(icon, size: 20, color: selected ? AppColors.primary : _ink),
           const SizedBox(width: 12),
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 14, color: _ink))),
-          Container(width: 18, height: 18,
-              decoration: BoxDecoration(shape: BoxShape.circle,
-                  border: Border.all(color: selected ? AppColors.primary : const Color(0xFFC7CBD9), width: selected ? 5 : 1.5))),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      color: _ink)),
+              const SizedBox(height: 2),
+              Text(sub, style: const TextStyle(fontSize: 12, color: _sub)),
+            ]),
+          ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            width: 18, height: 18,
+            decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                    color: selected ? AppColors.primary : const Color(0xFFC7CBD9),
+                    width: selected ? 5 : 1.5)),
+          ),
         ]),
       ),
     );
+  }
+}
 
 /// Active call screen.
 class CallDriverScreen extends StatelessWidget {

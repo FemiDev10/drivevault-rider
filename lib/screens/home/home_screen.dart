@@ -4,6 +4,7 @@ import '../../widgets/status_bar.dart';
 import '../ride/route_search_screen.dart';
 import '../ride/my_rides_screen.dart';
 import '../account/account_screen.dart';
+import 'home_cards.dart';
 import '../menu/side_menu.dart';
 
 /// Home — map, greeting, search, promos & rewards, bottom nav.
@@ -88,19 +89,21 @@ class HomeScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _greetingRow(),
+                          FadeInUp(delayMs: 0, child: _greetingRow()),
                           const SizedBox(height: 16),
-                          _searchBar(context),
+                          FadeInUp(delayMs: 60, child: _searchBar(context)),
                           const SizedBox(height: 16),
-                          _sectionHeader('Promos & Rewards', trailingViewAll: true),
+                          FadeInUp(
+                              delayMs: 120,
+                              child: _sectionHeader('Promos & Rewards', trailingViewAll: true)),
                           const SizedBox(height: 12),
-                          _promoCard(),
-                          const SizedBox(height: 8),
-                          _verifyCard(),
-                          const SizedBox(height: 16),
-                          _sectionHeader('Your rewards'),
+                          const FadeInUp(delayMs: 180, child: PromoCarousel()),
+                          const SizedBox(height: 10),
+                          const FadeInUp(delayMs: 240, child: VerifyCard()),
+                          const SizedBox(height: 20),
+                          FadeInUp(delayMs: 300, child: _sectionHeader('Your rewards')),
                           const SizedBox(height: 12),
-                          _rewardsCard(),
+                          const FadeInUp(delayMs: 360, child: RewardsCard()),
                         ],
                       ),
                     ),
@@ -197,186 +200,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _promoCard() {
-    return Container(
-      height: 72,
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Positioned(
-            right: -32,
-            top: -32,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.card_giftcard,
-                      size: 22, color: AppColors.white),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('10% off your next ride',
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.white)),
-                    SizedBox(height: 2),
-                    Text('Limited time · Expires tonight',
-                        style: TextStyle(fontSize: 12, color: Color(0x99FFFFFF))),
-                  ],
-                ),
-                const Spacer(),
-                const Icon(Icons.chevron_right,
-                    size: 18, color: AppColors.white),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _verifyCard() {
-    return Container(
-      height: 75,
-      decoration: BoxDecoration(
-        color: _fieldBg,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _fieldBorder),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF0F9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.verified_user_outlined,
-                size: 22, color: AppColors.primary),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text('Verify account',
-                  style: TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700, color: _ink)),
-              SizedBox(height: 2),
-              Text('Earn 50 bonus points',
-                  style: TextStyle(fontSize: 12, color: _muted)),
-            ],
-          ),
-          const Spacer(),
-          const Icon(Icons.chevron_right, size: 18, color: _muted),
-        ],
-      ),
-    );
-  }
-
-  Widget _rewardsCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.stroke),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('DRIVEVAULT REWARDS',
-              style: TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w500, color: _muted)),
-          const SizedBox(height: 4),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: const [
-              Text('0',
-                  style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                      height: 1)),
-              SizedBox(width: 2),
-              Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Text('pts',
-                    style: TextStyle(fontSize: 12, color: _muted)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: const [
-                    Expanded(
-                      child: Text('Ride 5 times this week',
-                          style: TextStyle(fontSize: 12, color: _muted)),
-                    ),
-                    Text('0/5',
-                        style: TextStyle(fontSize: 12, color: AppColors.primary)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Row(
-                    children: [
-                      Container(width: 2, height: 6, color: AppColors.primary),
-                      Expanded(
-                        child: Container(height: 6, color: const Color(0x26171717)),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Align(
-            alignment: Alignment.centerRight,
-            child: Text('Next reward at 200 pts · 200 pts away',
-                style: TextStyle(fontSize: 10, color: _muted)),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _BottomNav extends StatelessWidget {
