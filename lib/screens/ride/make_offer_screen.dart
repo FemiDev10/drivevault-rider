@@ -33,6 +33,99 @@ class _MakeOfferScreenState extends State<MakeOfferScreen> {
 
   void _bump(int d) => setState(() => _offer = (_offer + d).clamp(widget.quote.negLow, widget.quote.negHigh));
 
+  /// Type a price manually — accepted only within the Min–Max range.
+  void _editPrice(RideQuote q) {
+    final ctrl = TextEditingController(text: _offer.toString());
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: StatefulBuilder(
+          builder: (ctx, setSheet) {
+            final entered = int.tryParse(ctrl.text.replaceAll(RegExp(r'\D'), ''));
+            final tooLow = entered != null && entered < q.negLow;
+            final tooHigh = entered != null && entered > q.negHigh;
+            final valid = entered != null && !tooLow && !tooHigh;
+            final err = tooLow
+                ? 'Minimum offer is ${naira(q.negLow)}'
+                : tooHigh
+                    ? 'Maximum offer is ${naira(q.negHigh)}'
+                    : null;
+            return Container(
+              decoration: const BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Center(
+                  child: Container(
+                      width: 68, height: 5,
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFDCDFE5), borderRadius: BorderRadius.circular(18))),
+                ),
+                const SizedBox(height: 16),
+                const Text('Enter your offer',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _ink)),
+                const SizedBox(height: 4),
+                Text('Between ${naira(q.negLow)} and ${naira(q.negHigh)}',
+                    style: const TextStyle(fontSize: 13, color: _sub)),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: ctrl,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setSheet(() {}),
+                  onSubmitted: (_) => valid ? _commitPrice(ctx, entered) : null,
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.primary),
+                  decoration: InputDecoration(
+                    prefixText: '₦ ',
+                    prefixStyle: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.primary),
+                    filled: true,
+                    fillColor: const Color(0xFFF0F2FA),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: err != null ? AppColors.red : Colors.transparent)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: err != null ? AppColors.red : AppColors.primary, width: 1.5)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(err ?? 'Recommended fare: ${naira(q.instant)}',
+                    style: TextStyle(fontSize: 12, color: err != null ? AppColors.red : _muted)),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity, height: 51,
+                  child: Material(
+                    color: valid ? AppColors.primary : const Color(0xFFC7CBD9),
+                    borderRadius: BorderRadius.circular(30),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(30),
+                      onTap: valid ? () => _commitPrice(ctx, entered) : null,
+                      child: const Center(
+                        child: Text('Set offer',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.white)),
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _commitPrice(BuildContext sheetCtx, int value) {
+    setState(() => _offer =
+        value.clamp(widget.quote.negLow, widget.quote.negHigh));
+    Navigator.pop(sheetCtx);
+  }
+
   void _send() {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => RideProgressScreen(
@@ -126,13 +219,17 @@ class _MakeOfferScreenState extends State<MakeOfferScreen> {
                         Expanded(
                           child: Column(
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(naira(_offer), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                                  const SizedBox(width: 6),
-                                  const Icon(Icons.edit_outlined, size: 16, color: _muted),
-                                ],
+                              GestureDetector(
+                                onTap: () => _editPrice(q),
+                                behavior: HitTestBehavior.opaque,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(naira(_offer), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                                    const SizedBox(width: 6),
+                                    const Icon(Icons.edit_outlined, size: 16, color: _muted),
+                                  ],
+                                ),
                               ),
                               const SizedBox(height: 2),
                               Text('Recommended fare: ${naira(q.instant)}', style: const TextStyle(fontSize: 12, color: _muted)),

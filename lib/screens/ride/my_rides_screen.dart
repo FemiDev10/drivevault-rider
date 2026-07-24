@@ -120,7 +120,7 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
       onTap: r.cancelled ? null : () {
         final dest = Place(name: r.addr.split(',').first, subtitle: r.addr, distanceKm: 8.9);
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => TripSummaryScreen(
-            total: r.fare, pickup: PlacesRepository.currentLocation, destination: dest, tier: 'DriveVault Go')));
+            total: r.fare, pickup: PlacesRepository.currentLocation, destination: dest, tier: 'Go')));
       },
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

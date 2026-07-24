@@ -107,9 +107,9 @@ class PricingService {
   static final instance = PricingService._();
 
   static const tiers = <RideTier>[
-    RideTier(id: 'dvgo', name: 'DvGo', seats: 4, blurb: 'Faster Pickup', asset: 'assets/images/car_dvgo.png', etaMin: 3, baseFare: 2600, perKm: 560),
-    RideTier(id: 'comfort', name: 'Comfort', seats: 4, blurb: 'Comfortable cars', asset: 'assets/images/car_comfort.png', etaMin: 5, baseFare: 3800, perKm: 770),
-    RideTier(id: 'executive', name: 'Executive', seats: 4, blurb: 'Premium cars', asset: 'assets/images/car_executive.png', etaMin: 6, baseFare: 5200, perKm: 1040),
+    RideTier(id: 'dvgo', name: 'Go', seats: 4, blurb: 'Faster Pickup', asset: 'assets/images/car_dvgo.png', etaMin: 3, baseFare: 2600, perKm: 560),
+    RideTier(id: 'comfort', name: 'Plus', seats: 4, blurb: 'Comfortable cars', asset: 'assets/images/car_comfort.png', etaMin: 5, baseFare: 3800, perKm: 770),
+    RideTier(id: 'executive', name: 'Lux', seats: 4, blurb: 'Premium cars', asset: 'assets/images/car_executive.png', etaMin: 6, baseFare: 5200, perKm: 1040),
     RideTier(id: 'xl', name: 'XL', seats: 6, blurb: 'Extra space', asset: 'assets/images/car_xl.png', etaMin: 6, baseFare: 4200, perKm: 700, isMore: true),
   ];
 

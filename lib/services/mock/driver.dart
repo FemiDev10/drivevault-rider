@@ -29,4 +29,4 @@ const kDriver = Driver(
 );
 
 const kPickupStreet = 'Shehu Biliaminu Ola Adua Street';
-const kTierLabel = 'DriveVault Go';
+const kTierLabel = 'Go';
