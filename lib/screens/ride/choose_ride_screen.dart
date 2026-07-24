@@ -142,31 +142,62 @@ class _RoutePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
+      height: 52,
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 2, offset: Offset(0, 2))],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 10, offset: Offset(0, 3))],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.fromLTRB(6, 6, 8, 6),
       child: Row(
         children: [
-          InkWell(onTap: onClose, child: const Icon(Icons.close, size: 20, color: _ink)),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(pickup.name, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary)),
+          // back
+          InkWell(
+            onTap: onClose,
+            customBorder: const CircleBorder(),
+            child: const SizedBox(
+              width: 36, height: 36,
+              child: Icon(Icons.arrow_back, size: 20, color: _ink),
+            ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6),
-            child: Icon(Icons.arrow_forward, size: 16, color: _ink),
+          // origin → destination, stacked so it reads like a route
+          Expanded(
+            child: Row(
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.trip_origin, size: 11, color: AppColors.primary),
+                    Container(width: 1.5, height: 8, color: const Color(0xFFDDE1EC)),
+                    const Icon(Icons.location_on, size: 12, color: AppColors.primary),
+                  ],
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(pickup.name.isEmpty ? 'Current location' : pickup.name,
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _ink)),
+                      const SizedBox(height: 2),
+                      Text(destination.name,
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _ink)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          Flexible(
-            child: Text(destination.name, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF02002C))),
+          const SizedBox(width: 8),
+          // add stop
+          Container(
+            width: 32, height: 32,
+            decoration: const BoxDecoration(color: Color(0xFFF0F2FA), shape: BoxShape.circle),
+            child: const Icon(Icons.add, size: 18, color: AppColors.primary),
           ),
-          const SizedBox(width: 6),
-          const Icon(Icons.add, size: 20, color: _ink),
         ],
       ),
     );
