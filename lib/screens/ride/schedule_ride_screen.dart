@@ -1031,14 +1031,25 @@ class _LocationPickerScreenState extends State<_LocationPickerScreen> {
                   child: TextField(
                     controller: _q,
                     autofocus: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (v) => v.trim().isNotEmpty ? _useTyped() : null,
                     style: const TextStyle(fontSize: 15, color: _ink),
                     decoration: const InputDecoration(
                         isCollapsed: true,
                         border: InputBorder.none,
-                        hintText: 'Search address or place',
+                        hintText: 'Enter address or place',
                         hintStyle: TextStyle(fontSize: 15, color: Color(0xFFB0B4C4))),
                   ),
                 ),
+                if (_q.text.isNotEmpty)
+                  InkWell(
+                    onTap: () => setState(_q.clear),
+                    customBorder: const CircleBorder(),
+                    child: const Padding(
+                      padding: EdgeInsets.all(2),
+                      child: Icon(Icons.close, size: 18, color: _sub),
+                    ),
+                  ),
               ]),
             ),
           ),
@@ -1046,6 +1057,8 @@ class _LocationPickerScreenState extends State<_LocationPickerScreen> {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               children: [
+                // Manually type any address — not everywhere is in the list.
+                if (_q.text.trim().isNotEmpty) _useTypedTile(),
                 if (widget.allowCurrent && _q.text.trim().isEmpty)
                   _tile(PlacesRepository.currentLocation, isCurrent: true),
                 for (final p in _results) _tile(p),
@@ -1056,6 +1069,36 @@ class _LocationPickerScreenState extends State<_LocationPickerScreen> {
       ),
     );
   }
+
+  /// Return a Place built from exactly what the rider typed.
+  void _useTyped() {
+    final text = _q.text.trim();
+    if (text.isEmpty) return;
+    Navigator.of(context).pop(Place(name: text, subtitle: '', distanceKm: 6.0));
+  }
+
+  Widget _useTypedTile() => InkWell(
+        onTap: _useTyped,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(children: [
+            const Icon(Icons.add_location_alt_outlined, size: 20, color: AppColors.primary),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Use “${_q.text.trim()}”',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                const SizedBox(height: 2),
+                const Text('Set this as your address',
+                    style: TextStyle(fontSize: 12, color: _sub)),
+              ]),
+            ),
+          ]),
+        ),
+      );
 
   Widget _tile(Place p, {bool isCurrent = false}) => InkWell(
         onTap: () => Navigator.of(context).pop(p),
