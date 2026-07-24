@@ -30,8 +30,10 @@ class ScheduleRideScreen extends StatefulWidget {
 class _ScheduleRideScreenState extends State<ScheduleRideScreen> {
   DateTime? _date;
   TimeOfDay? _time;
+  Place _pickup = PlacesRepository.currentLocation;
+  Place? _dest;
 
-  bool get _valid => _date != null && _time != null;
+  bool get _valid => _date != null && _time != null && _dest != null;
 
   DateTime get _when => DateTime(
       _date!.year, _date!.month, _date!.day, _time!.hour, _time!.minute);
@@ -67,6 +69,21 @@ class _ScheduleRideScreenState extends State<ScheduleRideScreen> {
     if (t != null) setState(() => _time = t);
   }
 
+  Future<void> _pickLocation({required bool isPickup}) async {
+    final p = await Navigator.of(context).push<Place>(MaterialPageRoute(
+        builder: (_) => _LocationPickerScreen(
+            title: isPickup ? 'Set pickup' : 'Where to?', allowCurrent: isPickup)));
+    if (p != null) {
+      setState(() {
+        if (isPickup) {
+          _pickup = p;
+        } else {
+          _dest = p;
+        }
+      });
+    }
+  }
+
   Widget _themed(BuildContext context, Widget? child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.light(
@@ -92,29 +109,39 @@ class _ScheduleRideScreenState extends State<ScheduleRideScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
               children: [
-                const Text('When should we pick you up?',
+                const Text('Plan your ride',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _ink)),
                 const SizedBox(height: 6),
                 const Text(
                     'Book from 30 minutes up to 90 days ahead. We’ll assign a driver shortly before pickup.',
                     style: TextStyle(fontSize: 13, color: _sub, height: 1.45)),
                 const SizedBox(height: 24),
+                _field('Pickup',
+                    _pickup.subtitle.isEmpty ? _pickup.name : _pickup.subtitle,
+                    Icons.my_location, true, () => _pickLocation(isPickup: true)),
+                const SizedBox(height: 16),
+                _field('Destination', _dest?.name ?? 'Where to?', Icons.place_outlined,
+                    _dest != null, () => _pickLocation(isPickup: false)),
+                const SizedBox(height: 16),
                 _field('Date', _dateText, Icons.calendar_today_outlined, _date != null, _pickDate),
                 const SizedBox(height: 16),
                 _field('Pickup time', _timeText, Icons.schedule, _time != null, _pickTime),
                 const SizedBox(height: 20),
-                if (_valid) _windowNote(),
+                if (_date != null && _time != null) _windowNote(),
               ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
             child: PrimaryButton(
-              label: 'Next',
+              label: 'Choose a ride',
               enabled: _valid,
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => WhoIsRidingScreen(
-                    when: _when, forSomeoneElse: widget.forSomeoneElse),
+                builder: (_) => ScheduleTierScreen(
+                    pickup: _pickup,
+                    destination: _dest!,
+                    when: _when,
+                    forSomeoneElse: widget.forSomeoneElse),
               )),
             ),
           ),
@@ -168,10 +195,139 @@ class _ScheduleRideScreenState extends State<ScheduleRideScreen> {
       ]);
 }
 
+/// Tier selection for a scheduled ride (966:18549 with the "Schedule ahead"
+/// toggle). Fares are shown as **ranges** — a scheduled price can't be fixed.
+class ScheduleTierScreen extends StatefulWidget {
+  const ScheduleTierScreen({
+    super.key,
+    required this.pickup,
+    required this.destination,
+    required this.when,
+    this.forSomeoneElse = false,
+  });
+  final Place pickup;
+  final Place destination;
+  final DateTime when;
+  final bool forSomeoneElse;
+
+  @override
+  State<ScheduleTierScreen> createState() => _ScheduleTierScreenState();
+}
+
+class _ScheduleTierScreenState extends State<ScheduleTierScreen> {
+  late final List<RideQuote> _quotes =
+      PricingService.instance.quotes(widget.destination.distanceKm);
+  late String _selected = _quotes.first.tier.id;
+
+  RideQuote get _picked => _quotes.firstWhere((q) => q.tier.id == _selected);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        top: false,
+        child: Column(children: [
+          const StatusBar(),
+          const AccountHeader(title: 'Choose a ride'),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+              children: [
+                Text('Arriving by ${widget.destination.name}',
+                    style: const TextStyle(fontSize: 13, color: _sub)),
+                const SizedBox(height: 12),
+                for (final q in _quotes) _tierRow(q),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+            child: PrimaryButton(
+              label: 'Next',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => WhoIsRidingScreen(
+                  pickup: widget.pickup,
+                  destination: widget.destination,
+                  when: widget.when,
+                  quote: _picked,
+                  forSomeoneElse: widget.forSomeoneElse,
+                ),
+              )),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _tierRow(RideQuote q) {
+    final on = q.tier.id == _selected;
+    // scheduled = price range, not a fixed fare
+    final low = (q.instant * 0.9).round();
+    final high = (q.instant * 1.2).round();
+    return InkWell(
+      onTap: () => setState(() => _selected = q.tier.id),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: on ? AppColors.primary.withValues(alpha: 0.05) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: on ? AppColors.primary : AppColors.stroke,
+              width: on ? 1.5 : 1),
+        ),
+        child: Row(children: [
+          Container(
+            width: 46, height: 46,
+            decoration: BoxDecoration(
+                color: const Color(0xFFF0F2FA), borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.directions_car, size: 24, color: AppColors.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Text(q.tier.name,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w700, color: _ink)),
+                const SizedBox(width: 6),
+                Icon(Icons.person, size: 13, color: _sub),
+                Text('${q.tier.seats}', style: const TextStyle(fontSize: 12, color: _sub)),
+              ]),
+              const SizedBox(height: 2),
+              Text(q.tier.blurb, style: const TextStyle(fontSize: 12, color: _sub)),
+            ]),
+          ),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text('${naira(low)} – ${naira(high)}',
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w700, color: _ink)),
+            const SizedBox(height: 2),
+            const Text('Price range', style: TextStyle(fontSize: 11, color: _sub)),
+          ]),
+        ]),
+      ),
+    );
+  }
+}
+
 /// 968:19283 — "Who is riding?" Me / saved riders / add someone else.
 class WhoIsRidingScreen extends StatefulWidget {
-  const WhoIsRidingScreen({super.key, required this.when, this.forSomeoneElse = false});
+  const WhoIsRidingScreen({
+    super.key,
+    required this.pickup,
+    required this.destination,
+    required this.when,
+    required this.quote,
+    this.forSomeoneElse = false,
+  });
+  final Place pickup;
+  final Place destination;
   final DateTime when;
+  final RideQuote quote;
   final bool forSomeoneElse;
 
   @override
@@ -265,7 +421,10 @@ class _WhoIsRidingScreenState extends State<WhoIsRidingScreen> {
               label: 'Next',
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => ScheduleReviewScreen(
+                  pickup: widget.pickup,
+                  destination: widget.destination,
                   when: widget.when,
+                  quote: widget.quote,
                   rider: _picked,
                   shareWithRider: _share,
                 ),
@@ -452,11 +611,17 @@ class _WhoIsRidingScreenState extends State<WhoIsRidingScreen> {
 class ScheduleReviewScreen extends StatefulWidget {
   const ScheduleReviewScreen({
     super.key,
+    required this.pickup,
+    required this.destination,
     required this.when,
+    required this.quote,
     required this.rider,
     required this.shareWithRider,
   });
+  final Place pickup;
+  final Place destination;
   final DateTime when;
+  final RideQuote quote;
   final RiderContact? rider;
   final bool shareWithRider;
 
@@ -465,16 +630,9 @@ class ScheduleReviewScreen extends StatefulWidget {
 }
 
 class _ScheduleReviewScreenState extends State<ScheduleReviewScreen> {
-  final _pickup = PlacesRepository.currentLocation;
-  late final Place _dest = PlacesRepository.instance.recents.isNotEmpty
-      ? PlacesRepository.instance.recents.first
-      : const Place(
-          name: 'Eko Hotel & Suites',
-          subtitle: 'Victoria Island, Lagos',
-          distanceKm: 8.9);
-
-  late final RideQuote _quote =
-      PricingService.instance.quotes(_dest.distanceKm).first;
+  Place get _pickup => widget.pickup;
+  Place get _dest => widget.destination;
+  RideQuote get _quote => widget.quote;
 
   late final ScheduledRide _ride = ScheduledRide(
     pickup: _pickup,
@@ -820,4 +978,110 @@ class _ScheduledRideCardState extends State<ScheduledRideCard> {
       ),
     );
   }
+}
+
+/// Lightweight destination/pickup picker that returns a [Place] via pop.
+/// Used by the schedule flow so pickup is editable and a destination is chosen.
+class _LocationPickerScreen extends StatefulWidget {
+  const _LocationPickerScreen({required this.title, this.allowCurrent = false});
+  final String title;
+  final bool allowCurrent;
+
+  @override
+  State<_LocationPickerScreen> createState() => _LocationPickerScreenState();
+}
+
+class _LocationPickerScreenState extends State<_LocationPickerScreen> {
+  final _q = TextEditingController();
+  List<Place> _results = PlacesRepository.instance.recents;
+
+  @override
+  void initState() {
+    super.initState();
+    _q.addListener(() =>
+        setState(() => _results = PlacesRepository.instance.search(_q.text)));
+  }
+
+  @override
+  void dispose() {
+    _q.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        top: false,
+        child: Column(children: [
+          const StatusBar(),
+          AccountHeader(title: widget.title),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                  color: _fieldBg, borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(children: [
+                const Icon(Icons.search, size: 20, color: _sub),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _q,
+                    autofocus: true,
+                    style: const TextStyle(fontSize: 15, color: _ink),
+                    decoration: const InputDecoration(
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        hintText: 'Search address or place',
+                        hintStyle: TextStyle(fontSize: 15, color: Color(0xFFB0B4C4))),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              children: [
+                if (widget.allowCurrent && _q.text.trim().isEmpty)
+                  _tile(PlacesRepository.currentLocation, isCurrent: true),
+                for (final p in _results) _tile(p),
+              ],
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _tile(Place p, {bool isCurrent = false}) => InkWell(
+        onTap: () => Navigator.of(context).pop(p),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(children: [
+            Icon(isCurrent ? Icons.my_location : iconFor(p.icon),
+                size: 20, color: isCurrent ? AppColors.primary : _sub),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(p.name,
+                    style: const TextStyle(fontSize: 14, color: _ink)),
+                if (p.subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(p.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: _sub)),
+                ],
+              ]),
+            ),
+            if (!isCurrent && p.distanceKm > 0)
+              Text('${p.distanceKm.toStringAsFixed(1)} km',
+                  style: const TextStyle(fontSize: 12, color: _sub)),
+          ]),
+        ),
+      );
 }

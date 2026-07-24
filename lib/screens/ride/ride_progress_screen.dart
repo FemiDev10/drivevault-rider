@@ -158,10 +158,13 @@ class _RideProgressScreenState extends State<RideProgressScreen> {
       _agreed = price;
       _phase = _Phase.confirmed;
     });
-    // Drivers usually ring to confirm the pickup spot once they're on the way.
-    _callTimer = Timer(const Duration(milliseconds: 1200), () {
-      if (mounted) IncomingCallScreen.ring(context);
-    });
+    // Edge cases (driver call, no-show) are reserved for long trips only —
+    // same rule as high demand. Short hops confirm and go straight to pickup.
+    if (_far) {
+      _callTimer = Timer(const Duration(milliseconds: 1200), () {
+        if (mounted) IncomingCallScreen.ring(context);
+      });
+    }
     _timer = Timer(const Duration(milliseconds: 2600), () {
       if (!mounted) return;
       setState(() => _phase = _Phase.arrived);
