@@ -20,6 +20,8 @@ class RouteSearchScreen extends StatefulWidget {
 
 class _RouteSearchScreenState extends State<RouteSearchScreen> {
   final _dest = TextEditingController();
+  final _pickupCtrl = TextEditingController(text: PlacesRepository.currentLocation.name);
+  final _pickupFocus = FocusNode();
   Place _pickup = PlacesRepository.currentLocation;
   List<Place> _results = const [];
 
@@ -29,12 +31,28 @@ class _RouteSearchScreenState extends State<RouteSearchScreen> {
     _dest.addListener(() {
       setState(() => _results = PlacesRepository.instance.search(_dest.text));
     });
+    // Keep the pickup Place in step with whatever the rider types.
+    _pickupCtrl.addListener(() {
+      final text = _pickupCtrl.text.trim();
+      _pickup = text.isEmpty
+          ? const Place(name: '', subtitle: '', distanceKm: 0)
+          : (text == PlacesRepository.currentLocation.name
+              ? PlacesRepository.currentLocation
+              : Place(name: text, subtitle: '', distanceKm: 0));
+    });
   }
 
   @override
   void dispose() {
     _dest.dispose();
+    _pickupCtrl.dispose();
+    _pickupFocus.dispose();
     super.dispose();
+  }
+
+  void _useCurrentLocation() {
+    _pickupCtrl.text = PlacesRepository.currentLocation.name;
+    setState(() => _pickup = PlacesRepository.currentLocation);
   }
 
   bool get _typing => _dest.text.trim().isNotEmpty;
@@ -83,9 +101,14 @@ class _RouteSearchScreenState extends State<RouteSearchScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: _RouteFields(
-              pickup: _pickup,
+              pickupController: _pickupCtrl,
+              pickupFocus: _pickupFocus,
               destController: _dest,
-              onClearPickup: () {},
+              onClearPickup: () {
+                _pickupCtrl.clear();
+                _pickupFocus.requestFocus();
+                setState(() {});
+              },
             ),
           ),
           const SizedBox(height: 16),
@@ -116,7 +139,7 @@ class _RouteSearchScreenState extends State<RouteSearchScreen> {
                 icon: Icons.my_location,
                 title: 'Use my current location',
                 subtitle: 'Victoria Island, Lagos',
-                onTap: () => setState(() => _pickup = PlacesRepository.currentLocation),
+                onTap: _useCurrentLocation,
               ),
               _ActionRow(
                 icon: Icons.location_on_outlined,
@@ -208,8 +231,14 @@ class _RouteSearchScreenState extends State<RouteSearchScreen> {
 
 /// Pickup + destination stacked fields with the connecting dotted rail.
 class _RouteFields extends StatelessWidget {
-  const _RouteFields({required this.pickup, required this.destController, required this.onClearPickup});
-  final Place pickup;
+  const _RouteFields({
+    required this.pickupController,
+    required this.pickupFocus,
+    required this.destController,
+    required this.onClearPickup,
+  });
+  final TextEditingController pickupController;
+  final FocusNode pickupFocus;
   final TextEditingController destController;
   final VoidCallback onClearPickup;
 
@@ -232,14 +261,31 @@ class _RouteFields extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Pickup', style: TextStyle(fontSize: 12, color: _muted)),
-                    Text(pickup.name,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _ink)),
+                    TextField(
+                      controller: pickupController,
+                      focusNode: pickupFocus,
+                      cursorColor: AppColors.primary,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _ink),
+                      decoration: const InputDecoration(
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        hintText: 'Enter pickup location',
+                        hintStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _muted),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: onClearPickup,
-                child: const Text('Clear', style: TextStyle(fontSize: 14, color: AppColors.primary)),
+              // Clear appears only when there is something to clear.
+              ValueListenableBuilder(
+                valueListenable: pickupController,
+                builder: (_, value, __) => value.text.isEmpty
+                    ? const SizedBox.shrink()
+                    : GestureDetector(
+                        onTap: onClearPickup,
+                        child: const Text('Clear',
+                            style: TextStyle(fontSize: 14, color: AppColors.primary)),
+                      ),
               ),
             ],
           ),
