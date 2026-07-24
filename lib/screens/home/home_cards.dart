@@ -237,11 +237,9 @@ class _VerifyCardState extends State<VerifyCard> with SingleTickerProviderStateM
         : inReview
             ? 'Usually takes a few minutes'
             : 'Unlock mega promos & weekly discounts';
-    final accent = verified
-        ? AppColors.green
-        : inReview
-            ? AppColors.primary
-            : const Color(0xFFB25E02);
+    // Navy is the Figma colour for this card — only the verified state
+    // earns green. Never amber: this is a prompt, not a warning.
+    final accent = verified ? AppColors.green : AppColors.primary;
 
     return GestureDetector(
       onTap: verified
