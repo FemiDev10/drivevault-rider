@@ -3,6 +3,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/status_bar.dart';
 import '../../services/mock/safety_repository.dart';
 import '../account/account_widgets.dart';
+import 'ride_recorder_screen.dart';
 
 const _ink = Color(0xFF0A0F2C);
 const _sub = Color(0xFF808080);
@@ -52,6 +53,10 @@ class _SafetyHubScreenState extends State<SafetyHubScreen> {
                         builder: (_) => const EmergencyContactsScreen()))),
                 // "Share trip" deliberately omitted: it only means anything during
                 // an active trip, and the in-trip sheet already carries that action.
+                _row(Icons.mic_none, 'Record ride',
+                    'Record ride audio and save it to your phone',
+                    () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const RideRecorderScreen()))),
                 _row(Icons.flag_outlined, 'Report an issue',
                     'Report unsafe driver or incident',
                     () => Navigator.of(context).push(
@@ -223,7 +228,26 @@ class _SosSheetState extends State<_SosSheet> {
                 'You have no emergency contacts yet. Add one so we can alert someone for you.',
                 style: TextStyle(fontSize: 13, color: _sub, height: 1.4)),
           ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
+        // Discreet alternative — start recording without placing a call.
+        SizedBox(
+          width: double.infinity, height: 50,
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.stroke),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RideRecorderScreen()));
+            },
+            icon: const Icon(Icons.mic_none, size: 18, color: _ink),
+            label: const Text('Record ride instead',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _ink)),
+          ),
+        ),
+        const SizedBox(height: 8),
         SizedBox(
           height: 48,
           width: double.infinity,
