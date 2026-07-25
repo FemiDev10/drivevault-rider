@@ -11,6 +11,7 @@ import 'trip_end_screens.dart';
 import 'ride_outcome_screens.dart';
 import 'incoming_call_screen.dart';
 import '../safety/safety_screens.dart';
+import '../../services/mock/recorder_controller.dart';
 import 'trip_details_sheet.dart';
 import 'payment_status_screen.dart';
 import 'message_call_screens.dart';
@@ -223,6 +224,7 @@ class _RideProgressScreenState extends State<RideProgressScreen> {
   /// 1362:17801 — rider didn't show; the driver waited 10 minutes and left.
   void _missedDriver() {
     if (!mounted) return;
+    RecorderController.instance.stopForTripEnd();
     _tick?.cancel();
     _timer?.cancel();
     Navigator.of(context).pushReplacement(
@@ -249,6 +251,7 @@ class _RideProgressScreenState extends State<RideProgressScreen> {
 
   void _endTrip() {
     if (!mounted) return;
+    RecorderController.instance.stopForTripEnd(); // bound to the trip
     showDialog(
       context: context, barrierDismissible: false,
       builder: (_) => ArrivedDialog(

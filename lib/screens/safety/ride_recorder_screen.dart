@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html; // web-only prototype — used for "Save to phone" download
@@ -7,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/status_bar.dart';
 import '../../services/mock/safety_repository.dart';
+import '../../services/mock/recorder_controller.dart';
 import '../account/account_widgets.dart';
 
 const _ink = Color(0xFF0A0F2C);
@@ -26,63 +26,50 @@ class RideRecorderScreen extends StatefulWidget {
 class _RideRecorderScreenState extends State<RideRecorderScreen>
     with SingleTickerProviderStateMixin {
   final _s = SafetyStore.instance;
+  final _rec = RecorderController.instance;
   late final AnimationController _wave =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
         ..repeat(reverse: true);
-
-  bool _recording = false;
-  int _seconds = 0;
-  Timer? _ticker;
 
   @override
   void initState() {
     super.initState();
     _s.addListener(_r);
+    _rec.addListener(_onRec);
   }
 
   void _r() => setState(() {});
 
+  // Surface the reason a recording auto-stopped (trip ended / hit the cap).
+  void _onRec() {
+    setState(() {});
+    final reason = _rec.consumeAutoStopReason();
+    if (reason != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(reason)));
+    }
+  }
+
   @override
   void dispose() {
-    _ticker?.cancel();
     _wave.dispose();
     _s.removeListener(_r);
+    _rec.removeListener(_onRec);
     super.dispose();
   }
 
+  bool get _recording => _rec.isRecording;
+
   void _toggle() {
     if (_recording) {
-      _stop();
-    } else {
-      setState(() {
-        _recording = true;
-        _seconds = 0;
-      });
-      _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (mounted) setState(() => _seconds++);
-      });
-    }
-  }
-
-  void _stop() {
-    _ticker?.cancel();
-    final secs = _seconds;
-    setState(() {
-      _recording = false;
-      _seconds = 0;
-    });
-    if (secs >= 1) {
-      _s.addRecording(RideRecording(label: 'Ride recording', seconds: secs));
+      _rec.stop();
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Recording saved to your library')));
+    } else {
+      _rec.start();
     }
   }
 
-  String get _timeLabel {
-    final m = _seconds ~/ 60;
-    final s = _seconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
+  String get _timeLabel => _rec.elapsedLabel;
 
   @override
   Widget build(BuildContext context) {

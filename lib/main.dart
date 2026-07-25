@@ -10,6 +10,10 @@ import 'screens/auth/otp_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/account/account_screen.dart';
 import 'screens/account/about_support_screens.dart';
+import 'screens/safety/recording_indicator.dart';
+
+/// Global navigator key so the app-wide recording indicator can navigate.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   runApp(const DriveVaultApp());
@@ -35,9 +39,15 @@ class DriveVaultApp extends StatelessWidget {
         // later if exact cross-platform matching is required.
         fontFamily: 'SF Pro Display',
       ),
-      // Wrap every screen in the phone frame so the web build looks like a
-      // real device and stays pixel-matched to the 393x852 Figma canvas.
-      builder: (context, child) => PhoneFrame(child: child ?? const SizedBox()),
+      navigatorKey: rootNavigatorKey,
+      // Wrap every screen in the phone frame, and float the recording indicator
+      // above everything so it stays visible on every screen while recording.
+      builder: (context, child) => PhoneFrame(
+        child: Stack(children: [
+          child ?? const SizedBox(),
+          const RecordingIndicator(),
+        ]),
+      ),
       initialRoute: Routes.splash,
       onGenerateRoute: (settings) {
         switch (settings.name) {
